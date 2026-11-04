@@ -4,127 +4,606 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Herramienta para la creación de equipos en el aula</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
     <!-- Iconos Phosphor -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <!-- SheetJS para leer Excel -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <!-- html2pdf para generar PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <!-- Fuentes de Google: Quicksand -->
-    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Quicksand', 'sans-serif'],
-                    },
-                    colors: {
-                        pastel: {
-                            bg: '#E8F5E9',
-                            primary: '#A5D6A7',
-                            secondary: '#81C784',
-                            accent: '#FFDAC1',
-                            text: '#2E4033',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
+    <!-- Fuentes de Google -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
-        body { 
-            background-color: #E8F5E9;
-            background-image: radial-gradient(#C8E6C9 1px, transparent 1px);
-            background-position: 0 0;
-            background-size: 30px 30px;
-            color: #2E4033;
+        :root {
+            --font-sans: 'Inter', sans-serif;
+            --font-display: 'Outfit', sans-serif;
+
+            --color-bg: #f8fafc;
+            --color-surface: rgba(255, 255, 255, 0.9);
+            --color-primary: #16a34a;
+            --color-primary-hover: #15803d;
+            --color-primary-light: #dcfce7;
+            --color-primary-text: #14532d;
+            --color-text-main: #0f172a;
+            --color-text-muted: #64748b;
+            --color-border: #e2e8f0;
+
+            /* Tipologías */
+            --role-helper-bg: #eef2ff;
+            --role-helper-border: #c7d2fe;
+            --role-helper-text: #3730a3;
+            --role-helper-accent: #6366f1;
+
+            --role-auto-bg: #f0fdf4;
+            --role-auto-border: #bbf7d0;
+            --role-auto-text: #166534;
+            --role-auto-accent: #22c55e;
+
+            --role-needs-bg: #fff7ed;
+            --role-needs-border: #fed7aa;
+            --role-needs-text: #9a3412;
+            --role-needs-accent: #f97316;
         }
-        
-        /* Estilos UI Modernos */
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.95);
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--color-bg);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(34, 197, 94, 0.05) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(99, 102, 241, 0.05) 0px, transparent 50%);
+            background-attachment: fixed;
+            color: var(--color-text-main);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Glassmorphism */
+        .glass-card {
+            background: var(--color-surface);
             backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.8);
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            border-radius: 20px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.03), 0 8px 10px -6px rgba(0, 0, 0, 0.03);
         }
 
-        .btn-pastel {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .btn-pastel:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px -10px rgba(0,0,0,0.1);
+        /* Encabezado */
+        header {
+            margin: 16px 16px 0 16px;
+            padding: 14px 24px;
+            z-index: 20;
         }
 
-        /* Drag & Drop */
-        .draggable-source { cursor: grab; }
-        .draggable-source:active { cursor: grabbing; }
-        .drop-zone { min-height: 150px; transition: all 0.2s; border-radius: 1rem; }
-        .drop-zone.drag-over { background-color: #f0fdf4; border: 2px dashed #81C784; transform: scale(1.01); }
-        
-        /* Badges de Alumnos */
-        .student-helper { background-color: #DCEDC8; border: 1px solid #AED581; color: #33691E; } 
-        .student-autonomous { background-color: #E1F5FE; border: 1px solid #81D4FA; color: #01579B; } 
-        .student-needs-help { background-color: #FFECB3; border: 1px solid #FFD54F; color: #BF360C; } 
+        .header-content {
+            max-width: 1280px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-        /* Grid del aula */
-        .desk-group {
-            background: white;
+        .brand-box {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .icon-badge {
+            background: linear-gradient(135deg, #16a34a, #4ade80);
+            color: white;
+            padding: 10px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(22, 163, 74, 0.25);
+        }
+
+        .title-main {
+            font-family: var(--font-display);
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--color-text-main);
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle-main {
+            font-size: 0.75rem;
+            color: var(--color-text-muted);
+            font-weight: 500;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+        }
+
+        .dot-pulse {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #10b981;
+        }
+
+        /* Navegación por Pasos */
+        nav {
+            margin-top: 12px;
+            padding: 0 16px;
+            z-index: 10;
+        }
+
+        .nav-container {
+            max-width: 650px;
+            margin: 0 auto;
+            background: rgba(226, 232, 240, 0.7);
+            backdrop-filter: blur(8px);
+            border-radius: 16px;
+            padding: 5px;
+            display: flex;
+            gap: 4px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 8px 12px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            border: none;
+            background: transparent;
+            color: var(--color-text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .tab-btn:hover {
+            color: var(--color-text-main);
+        }
+
+        .tab-btn.active {
+            background-color: #ffffff;
+            color: var(--color-primary);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        .step-number {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #cbd5e1;
+            color: #334155;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+        }
+
+        .tab-btn.active .step-number {
+            background: var(--color-primary);
+            color: #ffffff;
+        }
+
+        /* Área principal */
+        main {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 16px;
+            position: relative;
+        }
+
+        .content-limit {
+            max-width: 900px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .content-limit-wide {
+            max-width: 1280px;
+            margin: 0 auto;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Paneles */
+        .panel {
+            padding: 24px;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .panel-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .panel-title h2 {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .panel-title p {
+            font-size: 0.75rem;
+            color: var(--color-text-muted);
+        }
+
+        .panel-icon {
+            padding: 8px;
+            border-radius: 10px;
+            font-size: 1.4rem;
+        }
+
+        /* Formularios y Inputs */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--color-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        select, input, textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            border: 1px solid var(--color-border);
+            background: #ffffff;
+            font-family: var(--font-sans);
+            font-size: 0.875rem;
+            color: var(--color-text-main);
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        select:focus, input:focus, textarea:focus {
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15);
+        }
+
+        .drop-zone-upload {
+            border: 2px dashed #cbd5e1;
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.5);
+            transition: all 0.2s ease;
+        }
+
+        .drop-zone-upload:hover {
+            background: rgba(240, 253, 244, 0.6);
+            border-color: var(--color-primary);
+        }
+
+        .drop-zone-upload i {
+            font-size: 2.5rem;
+            color: var(--color-primary);
+            margin-bottom: 8px;
+        }
+
+        /* Botones */
+        .btn {
+            padding: 10px 18px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #16a34a, #22c55e);
+            color: white;
+            box-shadow: 0 4px 12px rgba(22, 163, 74, 0.2);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(22, 163, 74, 0.3);
+        }
+
+        .btn-secondary {
+            background: #ffffff;
+            border: 1px solid var(--color-border);
+            color: var(--color-text-main);
+        }
+
+        .btn-secondary:hover {
+            background: #f1f5f9;
+        }
+
+        .btn-dark {
+            background: #0f172a;
+            color: white;
+        }
+
+        .btn-dark:hover {
+            background: #1e293b;
+        }
+
+        .btn-pdf {
+            background: linear-gradient(135deg, #e11d48, #f43f5e);
+            color: white;
+            box-shadow: 0 4px 12px rgba(225, 29, 72, 0.25);
+        }
+
+        .btn-pdf:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(225, 29, 72, 0.35);
+        }
+
+        /* Pestaña Configuración (Kanban) */
+        .kanban-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .kanban-col {
+            border-radius: 18px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid var(--color-border);
+        }
+
+        .col-helper { background: var(--role-helper-bg); border-color: var(--role-helper-border); }
+        .col-auto { background: var(--role-auto-bg); border-color: var(--role-auto-border); }
+        .col-needs { background: var(--role-needs-bg); border-color: var(--role-needs-border); }
+
+        .col-header {
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: 700;
+            font-size: 0.85rem;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .count-badge {
+            background: #ffffff;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 800;
+        }
+
+        .drop-zone {
+            padding: 12px;
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-height: 150px;
+        }
+
+        .drop-zone.drag-over {
+            background-color: rgba(34, 197, 94, 0.1);
+            outline: 2px dashed var(--color-primary);
+        }
+
+        .student-card {
+            background: #ffffff;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid #f1f5f9;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            cursor: grab;
+        }
+
+        .student-card:active { cursor: grabbing; }
+
+        .card-helper { border-left: 4px solid var(--role-helper-accent); }
+        .card-auto { border-left: 4px solid var(--role-auto-accent); }
+        .card-needs { border-left: 4px solid var(--role-needs-accent); }
+
+        /* PESTAÑA AULA (VISTA CENITAL DE ABAJO HACIA ARRIBA) */
+        .controls-bar {
+            margin-bottom: 16px;
+            padding: 16px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        .classroom-viewport {
+            background: #f1f5f9;
+            border: 2px solid #cbd5e1;
+            border-radius: 24px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* El contenedor desplaza las mesas y las organiza con flex-col-reverse o grid de abajo hacia arriba */
+        .classroom-map-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end; /* Alinea las mesas empezando cerca de la pizarra */
+        }
+
+        .desk-grid {
+            display: grid;
+            gap: 24px;
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        /* Estructura de Mesa Cenital */
+        .desk-cluster {
+            background: #ffffff;
             border: 2px solid #e2e8f0;
             border-radius: 16px;
             padding: 12px;
-            min-height: 90px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
             display: flex;
-            flex-direction: row; 
-            flex-wrap: wrap; 
-            align-content: center;
-            justify-content: center;
+            flex-direction: column;
             gap: 8px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-            position: relative;
-            transition: transform 0.2s;
-            page-break-inside: avoid;
-            break-inside: avoid;
+            transition: all 0.2s ease;
         }
-        .desk-group:hover {
-            transform: translateY(-2px);
-            border-color: #81C784;
+
+        .desk-cluster:hover {
+            border-color: #86efac;
+            box-shadow: 0 6px 16px rgba(34, 197, 94, 0.1);
         }
-        .desk-group::before {
-            content: attr(data-label);
-            position: absolute;
-            top: -24px;
-            left: 0;
-            width: 100%;
-            text-align: center;
-            font-weight: 700;
-            color: #718096;
+
+        .desk-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 4px;
+        }
+
+        .desk-title {
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: #64748b;
+            letter-spacing: 0.05em;
+        }
+
+        .desk-surface {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 8px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px;
+            min-height: 90px;
+            align-items: center;
+        }
+
+        .desk-seat {
+            padding: 6px 8px;
+            border-radius: 8px;
             font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            font-weight: 700;
+            text-align: center;
+            cursor: move;
+            user-select: none;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
-        /* --- CONFIGURACIÓN CRÍTICA PDF --- */
-        
-        /* Por defecto, el área de impresión está oculta */
-        #print-area {
-            display: none;
+        .seat-helper { background: var(--role-helper-bg); border: 1px solid var(--role-helper-border); color: var(--role-helper-text); }
+        .seat-auto { background: var(--role-auto-bg); border: 1px solid var(--role-auto-border); color: var(--role-auto-text); }
+        .seat-needs { background: var(--role-needs-bg); border: 1px solid var(--role-needs-border); color: var(--role-needs-text); }
+
+        /* Frente del Aula (Abajo) */
+        .front-classroom {
+            background: #e2e8f0;
+            border-top: 2px solid #cbd5e1;
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
         }
 
-        /* ESTADO "GENERANDO PDF" */
-        /* Cuando el body tiene esta clase, ocultamos la app y mostramos solo el informe */
+        .teacher-desk {
+            background: #fef3c7;
+            border: 1px solid #fde68a;
+            color: #92400e;
+            padding: 6px 14px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .blackboard {
+            flex: 1;
+            max-width: 400px;
+            background: #1e293b;
+            color: #f8fafc;
+            text-align: center;
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            letter-spacing: 0.1em;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        /* PDF Y EXPORTACIÓN */
+        #print-area { display: none; }
+
         body.generating-pdf {
             overflow: visible !important;
             height: auto !important;
             background: white !important;
         }
 
-        /* Ocultar elementos de la interfaz */
         body.generating-pdf header,
         body.generating-pdf nav,
         body.generating-pdf main,
@@ -134,25 +613,17 @@
             display: none !important;
         }
 
-        /* Mostrar área de impresión ocupando todo */
         body.generating-pdf #print-area {
             display: block !important;
-            position: relative;
             width: 100%;
-            height: auto;
-            background: white;
-            z-index: 99999;
         }
 
-        /* Estructura de página A4 */
         .pdf-page {
-            width: 100%;
-            max-width: 210mm; /* A4 width */
-            min-height: 296mm; /* A4 height */
-            margin: 0 auto;
+            width: 210mm;
+            min-height: 295mm;
             padding: 15mm;
+            margin: 0 auto;
             background: white;
-            position: relative;
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
@@ -160,384 +631,448 @@
             break-after: page;
         }
 
-        .pdf-cover-content {
+        .pdf-cover {
+            border: 3px double #e2e8f0;
+            border-radius: 20px;
+            padding: 40px;
             flex: 1;
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            border: 4px double #A5D6A7; 
-            border-radius: 20px;
-            padding: 40px;
-            background: #FAFAFA;
+            justify-content: space-between;
+            background: #fafafa;
         }
 
-        /* Ajuste del mapa en PDF */
-        #print-map-container {
-            width: 100%;
-            flex: 1;
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #0f172a;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 14px;
+            font-size: 0.8rem;
+            font-weight: 600;
             display: flex;
-            align-items: flex-start;
-            justify-content: center;
-            overflow: visible;
-            margin-top: 20px;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            transform: translateY(100px);
+            transition: transform 0.3s ease;
+            z-index: 99;
         }
 
-        #print-map-container > div {
-            display: grid !important;
-            gap: 15px !important;
-            width: 100%;
+        .toast.show {
+            transform: translateY(0);
         }
-        
+
+        .hidden { display: none !important; }
+
+        footer {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(8px);
+            border-top: 1px solid var(--color-border);
+            padding: 10px;
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--color-text-muted);
+            font-weight: 600;
+        }
+
+        footer a {
+            color: var(--color-primary);
+            text-decoration: none;
+        }
+
+        /* Diálogo Modal */
+        dialog {
+            border: none;
+            border-radius: 20px;
+            padding: 0;
+            max-width: 500px;
+            width: 90%;
+            margin: auto;
+            box-shadow: 0 20px 30px rgba(0,0,0,0.2);
+        }
+
         dialog::backdrop {
-            background-color: rgba(255, 255, 255, 0.7);
+            background: rgba(15, 23, 42, 0.4);
             backdrop-filter: blur(4px);
         }
     </style>
 </head>
-<body class="h-screen flex flex-col overflow-hidden text-gray-700">
+<body>
 
-    <!-- Encabezado -->
-    <header class="glass-panel z-10 m-4 rounded-2xl mb-0 border-b-4 border-pastel-secondary">
-        <div class="max-w-7xl mx-auto px-6 py-4">
-            <div class="flex justify-between items-center">
-                <div class="flex items-center gap-3">
-                    <div class="bg-pastel-secondary p-2 rounded-xl text-white shadow-sm">
-                        <i class="ph-bold ph-users-three text-2xl"></i>
-                    </div>
-                    <h1 class="text-xl font-bold text-gray-800 tracking-tight">Herramienta para la creación de equipos en el aula</h1>
+    <!-- Encabezado Principal -->
+    <header class="glass-card">
+        <div class="header-content">
+            <div class="brand-box">
+                <div class="icon-badge">
+                    <i class="ph-bold ph-users-three" style="font-size: 1.5rem;"></i>
                 </div>
+                <div>
+                    <h1 class="title-main">Herramienta para la creación de equipos en el aula</h1>
+                    <p class="subtitle-main">PlanificaciónCooperativa y Agrupamientos Inteligentes</p>
+                </div>
+            </div>
+            
+            <div class="status-pill">
+                <span class="dot-pulse"></span> Sistema Activo
             </div>
         </div>
     </header>
 
-    <!-- Navegación -->
-    <nav class="mt-4 px-4">
-        <div class="max-w-4xl mx-auto glass-panel rounded-full p-1 flex justify-between shadow-sm">
-            <button onclick="switchTab('tab-datos')" class="tab-btn flex-1 py-2 px-4 rounded-full font-bold text-sm transition-all text-gray-500 hover:bg-white/50" id="btn-tab-datos">1. DATOS</button>
-            <button onclick="switchTab('tab-config')" class="tab-btn flex-1 py-2 px-4 rounded-full font-bold text-sm transition-all text-gray-500 hover:bg-white/50" id="btn-tab-config">2. CONFIGURACIÓN</button>
-            <button onclick="switchTab('tab-aula')" class="tab-btn flex-1 py-2 px-4 rounded-full font-bold text-sm transition-all text-gray-500 hover:bg-white/50" id="btn-tab-aula">3. AULA</button>
-            <button onclick="switchTab('tab-export')" class="tab-btn flex-1 py-2 px-4 rounded-full font-bold text-sm transition-all text-gray-500 hover:bg-white/50" id="btn-tab-export">4. EXPORTACIÓN</button>
+    <!-- Navegación por Pestañas -->
+    <nav>
+        <div class="nav-container">
+            <button onclick="switchTab('tab-datos')" class="tab-btn active" id="btn-tab-datos">
+                <span class="step-number">1</span> Datos
+            </button>
+            <button onclick="switchTab('tab-config')" class="tab-btn" id="btn-tab-config">
+                <span class="step-number">2</span> Roles
+            </button>
+            <button onclick="switchTab('tab-aula')" class="tab-btn" id="btn-tab-aula">
+                <span class="step-number">3</span> Aula
+            </button>
+            <button onclick="switchTab('tab-export')" class="tab-btn" id="btn-tab-export">
+                <span class="step-number">4</span> Informe
+            </button>
         </div>
     </nav>
 
-    <!-- Contenido Principal -->
-    <main class="flex-1 overflow-auto p-6 relative">
+    <!-- Área Principal -->
+    <main>
         
         <!-- PESTAÑA 1: DATOS -->
-        <div id="tab-datos" class="tab-content max-w-4xl mx-auto space-y-6">
-            <div class="glass-panel rounded-3xl p-8">
-                <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-                    <i class="ph-duotone ph-identification-card text-pastel-secondary text-2xl"></i> Información del Grupo
-                </h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div>
-                        <label class="block text-sm font-bold text-gray-500 mb-2 ml-1">Grupo</label>
-                        <select id="select-grupo" class="w-full rounded-xl border-gray-200 bg-white p-3 focus:ring-2 focus:ring-pastel-secondary outline-none transition">
+        <div id="tab-datos" class="tab-content content-limit">
+            <div class="glass-card panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <div class="panel-icon" style="background: #eef2ff; color: #4f46e5;">
+                            <i class="ph-duotone ph-identification-card"></i>
+                        </div>
+                        <div>
+                            <h2>Información del Grupo</h2>
+                            <p>Asigna el grupo y la materia de trabajo</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Grupo / Curso</label>
+                        <select id="select-grupo">
                             <option value="">Selecciona un grupo...</option>
                         </select>
                     </div>
-                    <div>
-                        <label class="block text-sm font-bold text-gray-500 mb-2 ml-1">Asignatura</label>
-                        <select id="select-asignatura" class="w-full rounded-xl border-gray-200 bg-white p-3 focus:ring-2 focus:ring-pastel-secondary outline-none transition">
+                    <div class="form-group">
+                        <label>Asignatura</label>
+                        <select id="select-asignatura">
                             <option value="">Selecciona una asignatura...</option>
-                            <option>Biología</option><option>Conocimiento del medio</option><option>Economía</option><option>Educación Física</option>
-                            <option>Educación Plástica y Visual</option><option>Filosofía</option><option>Francés</option>
+                            <option>Biología y Geología</option><option>Conocimiento del Medio</option><option>Economía</option><option>Educación Física</option>
+                            <option>Educación Plástica y Visual</option><option>Filosofía</option><option>Física y Química</option><option>Francés</option>
                             <option>Geografía e Historia</option><option>Inglés</option><option>Latín</option>
-                            <option>Lengua</option><option>Matemáticas</option><option>Música</option>
-                            <option>Religión</option><option>Tecnología</option><option>Tutoría</option><option>Otra</option>
+                            <option>Lengua Castellana y Literatura</option><option>Matemáticas</option><option>Música</option>
+                            <option>Religión / Valores</option><option>Tecnología</option><option>Tutoría</option><option>Otra</option>
                         </select>
                     </div>
                 </div>
             </div>
 
-            <div class="glass-panel rounded-3xl p-8">
-                <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-                    <i class="ph-duotone ph-users text-pastel-secondary text-2xl"></i> Listado de Alumnado
-                </h2>
-                
-                <div class="border-2 border-dashed border-gray-300 rounded-2xl p-8 text-center hover:bg-white hover:border-pastel-secondary transition-all cursor-pointer bg-white/50" id="drop-area" onclick="document.getElementById('file-input').click()">
-                    <i class="ph-duotone ph-file-arrow-up text-5xl text-pastel-secondary mb-3"></i>
-                    <p class="text-gray-600 font-medium">Arrastra aquí un archivo Excel o clica para buscar</p>
+            <div class="glass-card panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <div class="panel-icon" style="background: #f0fdf4; color: #16a34a;">
+                            <i class="ph-duotone ph-users"></i>
+                        </div>
+                        <div>
+                            <h2>Listado de Alumnado</h2>
+                            <p>Carga los nombres de los estudiantes</p>
+                        </div>
+                    </div>
+                    <span id="student-count-badge" style="font-size: 0.75rem; font-weight: 700; background: #f1f5f9; padding: 4px 10px; border-radius: 10px;">0 Alumnos</span>
+                </div>
+
+                <div class="drop-zone-upload" id="drop-area" onclick="document.getElementById('file-input').click()">
+                    <i class="ph-duotone ph-file-arrow-up"></i>
+                    <p style="font-weight: 700; font-size: 0.9rem;">Haz clic para buscar o arrastra un archivo Excel / TXT</p>
+                    <p style="font-size: 0.75rem; color: var(--color-text-muted); margin-top: 4px;">Archivos soportados: .xlsx, .xls, .csv, .txt</p>
                     <input type="file" id="file-input" class="hidden" accept=".csv,.txt,.xlsx,.xls">
                 </div>
 
-                <div class="mt-6">
-                    <label class="block text-sm font-bold text-gray-500 mb-2 ml-1">O pega la lista de nombres aquí:</label>
-                    <textarea id="manual-names" rows="5" class="w-full rounded-xl border-gray-200 bg-white p-3 focus:ring-2 focus:ring-pastel-secondary outline-none transition resize-none" placeholder="Juan García&#10;María López&#10;..."></textarea>
+                <div class="form-group" style="margin-top: 16px;">
+                    <label>O escribe/pega la lista (un nombre por línea):</label>
+                    <textarea id="manual-names" rows="5" placeholder="García López, Alejandro&#10;Martínez Ruiz, Sofia&#10;Pérez Gómez, Lucas"></textarea>
                 </div>
 
-                <div class="mt-6 flex flex-wrap gap-3">
-                    <button onclick="loadExampleData()" class="btn-pastel bg-white border border-gray-200 text-gray-600 py-2 px-5 rounded-xl text-sm font-bold flex items-center gap-2 shadow-sm">
-                        <i class="ph-bold ph-magic-wand text-pastel-secondary"></i> Probar ejemplo
-                    </button>
-                    <button onclick="document.getElementById('instructions-modal').showModal()" class="btn-pastel bg-white border border-gray-200 text-gray-600 py-2 px-5 rounded-xl text-sm font-bold flex items-center gap-2 shadow-sm">
-                        <i class="ph-bold ph-info text-blue-400"></i> Ayuda
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; flex-wrap: wrap; gap: 10px;">
+                    <div style="display: flex; gap: 8px;">
+                        <button onclick="loadExampleData()" class="btn btn-secondary">
+                            <i class="ph-bold ph-magic-wand" style="color: #f59e0b;"></i> Datos de Ejemplo
+                        </button>
+                        <button onclick="document.getElementById('instructions-modal').showModal()" class="btn btn-secondary">
+                            <i class="ph-bold ph-question" style="color: #0284c7;"></i> Ayuda
+                        </button>
+                    </div>
+                    <button onclick="saveData()" class="btn btn-primary">
+                        <i class="ph-bold ph-floppy-disk"></i> Guardar y Continuar
                     </button>
                 </div>
-            </div>
-
-            <div class="flex justify-end pt-2">
-                <button onclick="saveData()" class="btn-pastel bg-gradient-to-r from-pastel-secondary to-green-400 text-white font-bold py-3 px-10 rounded-2xl shadow-lg flex items-center gap-2 text-lg">
-                    <i class="ph-bold ph-floppy-disk"></i> Guardar Datos
-                </button>
             </div>
         </div>
 
-        <!-- PESTAÑA 2: CONFIGURACIÓN -->
-        <div id="tab-config" class="hidden tab-content max-w-7xl mx-auto h-full flex flex-col">
-            <div class="glass-panel p-6 rounded-2xl mb-6 flex justify-between items-center shrink-0">
-                <h2 class="text-xl font-bold text-gray-800">Tipología de Alumnas/os</h2>
-                <div class="text-sm text-gray-500 bg-white px-3 py-1 rounded-lg shadow-sm border border-gray-100">
-                    <i class="ph-fill ph-hand-pointing mr-1"></i> Arrastra para clasificar
+        <!-- PESTAÑA 2: CONFIGURACIÓN ROLES -->
+        <div id="tab-config" class="tab-content content-limit-wide hidden">
+            <div class="glass-card panel" style="padding: 16px 24px; margin-bottom: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <div>
+                        <h2 style="font-family: var(--font-display); font-size: 1.1rem; font-weight: 700;">Clasificación de Perfiles de Alumnado</h2>
+                        <p style="font-size: 0.75rem; color: var(--color-text-muted);">Arrastra a los alumnos para organizar sus roles cooperativos</p>
+                    </div>
+                    <div style="font-size: 0.75rem; background: #f1f5f9; padding: 6px 12px; border-radius: 20px; font-weight: 600;">
+                        <i class="ph-bold ph-hand-grabbing"></i> Arrastra y suelta para clasificar
+                    </div>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1 min-h-0 pb-2">
-                <!-- Helper -->
-                <div class="flex flex-col bg-[#DCEDC8] rounded-3xl border border-[#C5E1A5] shadow-sm overflow-hidden h-full">
-                    <div class="bg-[#C5E1A5]/50 p-4 border-b border-[#AED581] font-bold text-gray-700 flex justify-between items-center">
-                        <span class="flex items-center gap-2"><i class="ph-fill ph-hand-heart text-green-700"></i> Ayuda</span>
-                        <span id="count-helper" class="bg-white px-2 py-0.5 rounded-lg text-xs font-bold shadow-sm text-green-700">0</span>
+            <div class="kanban-grid">
+                <!-- Columna Ayudante -->
+                <div class="kanban-col col-helper">
+                    <div class="col-header">
+                        <span style="color: var(--role-helper-text);"><i class="ph-fill ph-hand-heart"></i> Ayudante</span>
+                        <span id="count-helper" class="count-badge" style="color: var(--role-helper-text);">0</span>
                     </div>
-                    <div id="zone-helper" class="p-4 overflow-y-auto flex-1 drop-zone space-y-2" ondrop="drop(event, 'helper')" ondragover="allowDrop(event)"></div>
+                    <div id="zone-helper" class="drop-zone" ondrop="drop(event, 'helper')" ondragover="allowDrop(event)"></div>
                 </div>
-                <!-- Autonomous -->
-                <div class="flex flex-col bg-[#E1F5FE] rounded-3xl border border-[#B3E5FC] shadow-sm overflow-hidden h-full">
-                    <div class="bg-[#B3E5FC]/50 p-4 border-b border-[#81D4FA] font-bold text-gray-700 flex justify-between items-center">
-                        <span class="flex items-center gap-2"><i class="ph-fill ph-brain text-blue-700"></i> Autónomo</span>
-                        <span id="count-autonomous" class="bg-white px-2 py-0.5 rounded-lg text-xs font-bold shadow-sm text-blue-700">0</span>
+
+                <!-- Columna Autónomo -->
+                <div class="kanban-col col-auto">
+                    <div class="col-header">
+                        <span style="color: var(--role-auto-text);"><i class="ph-fill ph-user-check"></i> Autónomo</span>
+                        <span id="count-autonomous" class="count-badge" style="color: var(--role-auto-text);">0</span>
                     </div>
-                    <div id="zone-autonomous" class="p-4 overflow-y-auto flex-1 drop-zone space-y-2" ondrop="drop(event, 'autonomous')" ondragover="allowDrop(event)"></div>
+                    <div id="zone-autonomous" class="drop-zone" ondrop="drop(event, 'autonomous')" ondragover="allowDrop(event)"></div>
                 </div>
-                <!-- Needs Help -->
-                <div class="flex flex-col bg-[#FFECB3] rounded-3xl border border-[#FFE082] shadow-sm overflow-hidden h-full">
-                    <div class="bg-[#FFE082]/50 p-4 border-b border-[#FFD54F] font-bold text-gray-700 flex justify-between items-center">
-                        <span class="flex items-center gap-2"><i class="ph-fill ph-lifebuoy text-orange-800"></i> Necesita Ayuda</span>
-                        <span id="count-needs-help" class="bg-white px-2 py-0.5 rounded-lg text-xs font-bold shadow-sm text-orange-800">0</span>
+
+                <!-- Columna Necesita Ayuda -->
+                <div class="kanban-col col-needs">
+                    <div class="col-header">
+                        <span style="color: var(--role-needs-text);"><i class="ph-fill ph-first-aid"></i> Necesita Apoyo</span>
+                        <span id="count-needs-help" class="count-badge" style="color: var(--role-needs-text);">0</span>
                     </div>
-                    <div id="zone-needs-help" class="p-4 overflow-y-auto flex-1 drop-zone space-y-2" ondrop="drop(event, 'needs-help')" ondragover="allowDrop(event)"></div>
+                    <div id="zone-needs-help" class="drop-zone" ondrop="drop(event, 'needs-help')" ondragover="allowDrop(event)"></div>
                 </div>
             </div>
-            
-            <div class="mt-4 flex justify-end shrink-0">
-                 <button onclick="switchTab('tab-aula')" class="btn-pastel bg-white text-gray-600 border border-gray-200 font-bold px-6 py-3 rounded-xl hover:bg-gray-50 flex items-center gap-2">Siguiente <i class="ph-bold ph-arrow-right"></i></button>
+
+            <div style="display: flex; justify-content: space-between; margin-top: 16px;">
+                <button onclick="switchTab('tab-datos')" class="btn btn-secondary"><i class="ph-bold ph-arrow-left"></i> Volver</button>
+                <button onclick="switchTab('tab-aula')" class="btn btn-dark">Diseñar Aula <i class="ph-bold ph-arrow-right"></i></button>
             </div>
         </div>
 
-        <!-- PESTAÑA 3: AULA -->
-        <div id="tab-aula" class="hidden tab-content max-w-full h-full flex flex-col items-center">
-            <!-- Controles -->
-            <div class="w-full glass-panel rounded-3xl p-5 mb-6 shrink-0 max-w-7xl shadow-sm">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-end">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Agrupamiento</label>
-                        <div class="flex gap-4">
-                            <label class="inline-flex items-center cursor-pointer group">
-                                <input type="radio" name="agrupamiento" value="heterogeneo" checked class="form-radio text-pastel-secondary focus:ring-pastel-secondary">
-                                <span class="ml-2 text-sm font-bold text-gray-600 group-hover:text-gray-800">Heterogéneo</span>
-                            </label>
-                            <label class="inline-flex items-center cursor-pointer group">
-                                <input type="radio" name="agrupamiento" value="homogeneo" class="form-radio text-pastel-secondary focus:ring-pastel-secondary">
-                                <span class="ml-2 text-sm font-bold text-gray-600 group-hover:text-gray-800">Homogéneo</span>
-                            </label>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Integrantes</label>
-                        <select id="select-espacio" class="w-full rounded-lg border-gray-200 bg-white p-2 text-sm font-medium outline-none focus:ring-2 focus:ring-pastel-secondary">
-                            <option value="2">2 alumnos</option>
-                            <option value="3">3 alumnos</option>
-                            <option value="4" selected>4 alumnos</option>
-                            <option value="5">5 alumnos</option>
-                            <option value="6">6 alumnos</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Ancho del Aula</label>
-                        <select id="select-grid-cols" class="w-full rounded-lg border-gray-200 bg-white p-2 text-sm font-medium outline-none focus:ring-2 focus:ring-pastel-secondary" onchange="updateGridColumns()">
-                            <option value="2">2 Grupos</option>
-                            <option value="3" selected>3 Grupos</option>
-                            <option value="4">4 Grupos</option>
-                            <option value="5">5 Grupos</option>
-                            <option value="6">6 Grupos</option>
-                            <option value="7">7 Grupos</option>
-                            <option value="8">8 Grupos</option>
-                        </select>
-                    </div>
-                    <div class="flex gap-2">
-                        <button onclick="distributeStudents()" class="flex-1 btn-pastel bg-gradient-to-r from-pastel-secondary to-green-400 text-white font-bold py-2 px-4 rounded-xl shadow-md">
-                            <i class="ph-bold ph-shuffle"></i> DISTRIBUIR
-                        </button>
-                        <button onclick="saveDistribution()" class="btn-pastel bg-gray-800 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-xl shadow-md">
-                            <i class="ph-bold ph-floppy-disk"></i>
-                        </button>
-                    </div>
+        <!-- PESTAÑA 3: AULA (NUMERACIÓN DE ABAJO HACIA ARRIBA) -->
+        <div id="tab-aula" class="tab-content content-limit-wide hidden">
+            <!-- Barra de Controles -->
+            <div class="glass-card controls-bar">
+                <div class="form-group">
+                    <label>Estrategia</label>
+                    <select id="select-estrategia">
+                        <option value="heterogeneo" selected>Heterogéneo (Recomendado)</option>
+                        <option value="homogeneo">Homogéneo</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Alumnos / Mesa</label>
+                    <select id="select-espacio">
+                        <option value="2">2 alumnos (Parejas)</option>
+                        <option value="3">3 alumnos</option>
+                        <option value="4" selected>4 alumnos (Equipo)</option>
+                        <option value="5">5 alumnos</option>
+                        <option value="6">6 alumnos</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Columnas de Mesas</label>
+                    <select id="select-grid-cols" onchange="updateGridColumns()">
+                        <option value="2">2 Columnas</option>
+                        <option value="3" selected>3 Columnas</option>
+                        <option value="4">4 Columnas</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button onclick="distributeStudents()" class="btn btn-primary" style="flex: 1;">
+                        <i class="ph-bold ph-shuffle"></i> Distribuir
+                    </button>
+                    <button onclick="saveDistribution()" class="btn btn-dark">
+                        <i class="ph-bold ph-check"></i>
+                    </button>
                 </div>
             </div>
 
-            <!-- Mapa del Aula - Estructura FLEX para fijar pizarra abajo -->
-            <div id="aula-container" class="w-full max-w-6xl aspect-[4/3] bg-white rounded-3xl border-8 border-gray-200 shadow-inner mx-auto flex flex-col overflow-hidden relative p-0">
-                
-                <!-- Área de mapa desplazable -->
-                <div id="aula-map-scroll" class="flex-1 overflow-y-auto p-10">
-                    <div id="aula-map" class="grid gap-8 justify-center pb-10 transition-all duration-300">
-                        <div class="col-span-full text-center text-gray-400 mt-20">
-                            <i class="ph-duotone ph-chalkboard-teacher text-7xl mb-4 opacity-50 text-pastel-secondary"></i>
-                            <p class="font-medium">Configura y pulsa "Distribuir"</p>
+            <!-- Vista Cenital del Aula -->
+            <div class="classroom-viewport">
+                <!-- Área desplazable de mesas -->
+                <div class="classroom-map-area">
+                    <div id="aula-map" class="desk-grid">
+                        <div style="grid-column: 1 / -1; text-align: center; color: var(--color-text-muted); padding: 40px 0;">
+                            <i class="ph-duotone ph-chalkboard-teacher" style="font-size: 3rem; margin-bottom: 8px; opacity: 0.5;"></i>
+                            <p style="font-weight: 700;">Haz clic en "Distribuir" para organizar las mesas del aula</p>
+                            <p style="font-size: 0.75rem; margin-top: 4px;">Las mesas se numeran de abajo hacia arriba (desde la pizarra hacia al fondo)</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- Pizarra FIJA al fondo del contenedor -->
-                <div class="shrink-0 w-full flex justify-center pb-0 bg-gray-100/50 border-t border-gray-200">
-                    <div class="w-80 bg-gray-700 text-white text-center py-2 rounded-t-2xl shadow-lg text-sm font-bold uppercase tracking-widest no-print">
+                <!-- Frente del Aula (Pizarra y Profesor abajo) -->
+                <div class="front-classroom">
+                    <div class="teacher-desk">
+                        <i class="ph-bold ph-desktop"></i> Mesa del Profesor/a
+                    </div>
+                    <div class="blackboard">
                         PIZARRA
                     </div>
+                    <div style="font-size: 0.75rem; font-weight: 700; color: #64748b; display: flex; items-center; gap: 4px;">
+                        <i class="ph-bold ph-door" style="font-size: 1rem;"></i> Entrada
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- PESTAÑA 4: EXPORTACIÓN -->
-        <div id="tab-export" class="hidden tab-content max-w-4xl mx-auto space-y-6">
-            <div class="glass-panel rounded-3xl p-10 text-center shadow-xl">
-                <div class="mb-6 inline-block p-4 rounded-full bg-red-50">
-                    <i class="ph-duotone ph-file-pdf text-6xl text-red-400"></i>
+        <!-- PESTAÑA 4: EXPORTACIÓN PDF -->
+        <div id="tab-export" class="tab-content content-limit hidden">
+            <div class="glass-card panel" style="text-align: center; padding: 40px 24px;">
+                <div style="width: 70px; height: 70px; background: #ffe4e6; color: #e11d48; border-radius: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto; font-size: 2rem;">
+                    <i class="ph-duotone ph-file-pdf"></i>
                 </div>
-                <h2 class="text-3xl font-bold text-gray-800 mb-2">Informe Listo</h2>
-                <p class="text-gray-500 mb-8 max-w-md mx-auto">Descarga un informe PDF con estilo profesional que incluye portada con datos y el mapa de la distribución.</p>
-                
-                <div class="flex flex-col sm:flex-row justify-center gap-4">
-                    <button onclick="generatePDF()" class="btn-pastel bg-gradient-to-r from-red-400 to-pink-400 text-white font-bold py-4 px-10 rounded-2xl shadow-lg shadow-pink-200 hover:shadow-pink-300 flex items-center justify-center gap-3 text-lg">
-                        <i class="ph-bold ph-download-simple"></i> Descargar PDF
+                <h2 style="font-family: var(--font-display); font-size: 1.5rem; font-weight: 800; margin-bottom: 8px;">Informe de Aula Generado</h2>
+                <p style="font-size: 0.85rem; color: var(--color-text-muted); max-width: 450px; margin: 0 auto 24px auto;">Descarga tu documento impreso en PDF con portada oficial, datos del curso y el mapa del aula numerado.</p>
+
+                <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
+                    <button onclick="generatePDF()" class="btn btn-pdf" style="padding: 12px 28px; font-size: 0.95rem;">
+                        <i class="ph-bold ph-download-simple"></i> Descargar Documento PDF
                     </button>
-                    
-                    <button onclick="resetApp()" class="btn-pastel bg-white border-2 border-gray-200 text-gray-500 font-bold py-4 px-8 rounded-2xl hover:bg-gray-50 flex items-center justify-center gap-2">
+                    <button onclick="resetApp()" class="btn btn-secondary" style="padding: 12px 20px;">
                         <i class="ph-bold ph-arrow-counter-clockwise"></i> Reiniciar
                     </button>
                 </div>
             </div>
 
-            <div class="glass-panel rounded-3xl p-8">
-                <h3 class="font-bold text-gray-700 mb-4 uppercase text-xs tracking-wider border-b pb-2">Resumen</h3>
-                <div id="export-preview" class="text-sm text-gray-600 space-y-2">
-                    <p class="italic text-gray-400">No hay datos guardados aún.</p>
+            <div class="glass-card panel">
+                <h3 style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-muted); margin-bottom: 12px; font-weight: 700;">Resumen General</h3>
+                <div id="export-preview" style="font-size: 0.85rem; color: var(--color-text-main);">
+                    <p style="color: var(--color-text-muted); font-style: italic;">Sin datos guardados aún.</p>
                 </div>
             </div>
         </div>
     </main>
 
-    <!-- Footer -->
-    <footer class="bg-white/80 backdrop-blur border-t border-gray-200 py-3 text-center text-xs text-gray-500 no-print z-10 font-bold">
-        Autor: <a href="https://blogsaverroes.juntadeandalucia.es/ellocodelamochila/" target="_blank" class="text-pastel-secondary hover:text-green-600 transition-colors">El loco de la mochila</a>
+    <!-- Pie de página -->
+    <footer>
+        Herramienta para la creación de equipos en el aula · Autor: <a href="https://blogsaverroes.juntadeandalucia.es/ellocodelamochila/" target="_blank">El loco de la mochila</a>
     </footer>
 
-    <!-- MODAL INSTRUCCIONES -->
-    <dialog id="instructions-modal" class="rounded-3xl shadow-2xl p-0 w-full max-w-2xl bg-white overflow-hidden m-auto">
-        <div class="bg-gradient-to-r from-pastel-secondary to-green-200 p-6 flex justify-between items-center">
-            <h3 class="text-xl font-bold text-green-900 flex items-center gap-2"><i class="ph-bold ph-info"></i> Guía Rápida</h3>
-            <button onclick="document.getElementById('instructions-modal').close()" class="bg-white/50 hover:bg-white text-green-900 rounded-full w-8 h-8 flex items-center justify-center transition">
-                <i class="ph-bold ph-x"></i>
-            </button>
+    <!-- MODAL DE AYUDA -->
+    <dialog id="instructions-modal">
+        <div style="background: linear-gradient(135deg, #16a34a, #22c55e); color: white; padding: 20px; display: flex; justify-between; align-items: center;">
+            <h3 style="font-family: var(--font-display); font-size: 1.1rem; font-weight: 700;"><i class="ph-bold ph-info"></i> Guía de Uso</h3>
+            <button onclick="document.getElementById('instructions-modal').close()" style="background: rgba(255,255,255,0.2); border: none; color: white; width: 28px; height: 28px; border-radius: 50%; cursor: pointer;">✕</button>
         </div>
-        <div class="p-8 space-y-6 text-gray-600 overflow-y-auto max-h-[60vh]">
-            <div class="flex gap-4">
-                <div class="bg-green-100 text-green-800 w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg shrink-0">1</div>
-                <div><h4 class="font-bold text-gray-800 text-lg">Datos</h4><p class="text-sm leading-relaxed">Selecciona el grupo y la asignatura. Pega la lista o sube un Excel.</p></div>
+        <div style="padding: 24px; display: flex; flex-direction: column; gap: 16px; font-size: 0.85rem; color: #334155;">
+            <div>
+                <strong>1. Datos:</strong> Elige curso, asignatura e introduce o sube el listado de alumnos.
             </div>
-            <div class="flex gap-4">
-                <div class="bg-blue-100 text-blue-800 w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg shrink-0">2</div>
-                <div><h4 class="font-bold text-gray-800 text-lg">Configuración</h4><p class="text-sm leading-relaxed">Arrastra a los alumnos para clasificarlos por roles.</p></div>
+            <div>
+                <strong>2. Roles:</strong> Clasifica al alumnado en Ayudantes, Autónomos y Necesitados de Ayuda.
             </div>
-            <div class="flex gap-4">
-                <div class="bg-orange-100 text-orange-800 w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg shrink-0">3</div>
-                <div><h4 class="font-bold text-gray-800 text-lg">Aula</h4><p class="text-sm leading-relaxed">Elige tamaño de grupos y ancho del aula. Pulsa Distribuir.</p></div>
+            <div>
+                <strong>3. Aula:</strong> Genera las mesas cooperativas. Se numeran comenzando por abajo (Pizarra).
             </div>
-            <div class="flex gap-4">
-                <div class="bg-red-100 text-red-800 w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg shrink-0">4</div>
-                <div><h4 class="font-bold text-gray-800 text-lg">Exportar</h4><p class="text-sm leading-relaxed">Descarga un PDF listo para imprimir.</p></div>
+            <div>
+                <strong>4. Informe:</strong> Descarga el archivo PDF para tener el registro impreso de la clase.
             </div>
         </div>
-        <div class="bg-gray-50 p-6 flex justify-end">
-            <button onclick="document.getElementById('instructions-modal').close()" class="bg-green-600 text-white px-6 py-2 rounded-xl font-bold hover:bg-green-700 transition shadow-lg shadow-green-200">¡Entendido!</button>
+        <div style="padding: 16px; background: #f8fafc; text-align: right; border-top: 1px solid #e2e8f0;">
+            <button onclick="document.getElementById('instructions-modal').close()" class="btn btn-dark">Entendido</button>
         </div>
     </dialog>
 
-    <!-- ÁREA DE GENERACIÓN PDF (Contenedor Real) -->
+    <!-- ÁREA PDF EXCLUSIVA -->
     <div id="print-area">
         <!-- PÁGINA 1: PORTADA -->
         <div class="pdf-page">
-            <div class="pdf-cover-content">
-                <div class="mb-8">
-                    <i class="ph-duotone ph-student text-8xl text-pastel-secondary"></i>
+            <div class="pdf-cover">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; pb-4;">
+                    <div>
+                        <span style="font-size: 0.7rem; font-weight: 800; color: #16a34a; text-transform: uppercase;">Informe Oficial</span>
+                        <h2 style="font-size: 1.2rem; font-weight: 800; color: #0f172a;">Planificación Cooperativa de Aula</h2>
+                    </div>
+                    <span id="pdf-date-top" style="font-size: 0.8rem; font-weight: 600; color: #64748b;"></span>
                 </div>
-                <h1 class="text-5xl font-bold text-gray-800 mb-4 tracking-tight">Distribución de Aula</h1>
-                <h2 class="text-2xl text-gray-500 mb-12 font-medium">Planificación de Equipos Cooperativos</h2>
-                
-                <div class="w-full max-w-2xl bg-white border border-gray-200 rounded-2xl p-8 shadow-sm grid grid-cols-2 gap-y-8 gap-x-12 text-left mb-12">
+
+                <div style="text-align: center; margin: 40px 0;">
+                    <h1 style="font-size: 2.2rem; font-weight: 800; color: #0f172a; margin-bottom: 8px;">Herramienta para la creación de equipos en el aula</h1>
+                    <p style="color: #64748b; font-size: 0.95rem;">Distribución espacial de mesas y asignación de perfiles</p>
+                </div>
+
+                <div style="background: white; border: 1px solid #cbd5e1; border-radius: 16px; padding: 24px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 30px;">
                     <div>
-                        <p class="text-xs text-gray-400 font-bold uppercase tracking-wider mb-1">Grupo</p>
-                        <p class="text-2xl font-bold text-gray-800" id="cover-group">-</p>
+                        <span style="font-size: 0.65rem; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Grupo / Curso</span>
+                        <p id="cover-group" style="font-size: 1.3rem; font-weight: 800; color: #0f172a;">-</p>
                     </div>
                     <div>
-                        <p class="text-xs text-gray-400 font-bold uppercase tracking-wider mb-1">Asignatura</p>
-                        <p class="text-2xl font-bold text-gray-800" id="cover-subject">-</p>
+                        <span style="font-size: 0.65rem; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Asignatura</span>
+                        <p id="cover-subject" style="font-size: 1.3rem; font-weight: 800; color: #0f172a;">-</p>
                     </div>
                     <div>
-                        <p class="text-xs text-gray-400 font-bold uppercase tracking-wider mb-1">Fecha</p>
-                        <p class="text-2xl font-bold text-gray-800" id="cover-date">-</p>
+                        <span style="font-size: 0.65rem; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Total Alumnado</span>
+                        <p id="cover-total" style="font-size: 1.3rem; font-weight: 800; color: #0f172a;">-</p>
                     </div>
                     <div>
-                        <p class="text-xs text-gray-400 font-bold uppercase tracking-wider mb-1">Total Alumnado</p>
-                        <p class="text-2xl font-bold text-gray-800" id="cover-total">-</p>
+                        <span style="font-size: 0.65rem; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Mesas Formadas</span>
+                        <p id="cover-teams" style="font-size: 1.3rem; font-weight: 800; color: #0f172a;">-</p>
                     </div>
                 </div>
 
-                <div class="flex gap-8 justify-center text-sm font-medium">
-                    <div class="flex items-center gap-2 px-4 py-2 bg-[#DCEDC8] rounded-full border border-green-300 text-green-900">
-                        <div class="w-3 h-3 rounded-full bg-green-600"></div> Ayuda
-                    </div>
-                    <div class="flex items-center gap-2 px-4 py-2 bg-[#E1F5FE] rounded-full border border-blue-300 text-blue-900">
-                        <div class="w-3 h-3 rounded-full bg-blue-600"></div> Autónomo
-                    </div>
-                    <div class="flex items-center gap-2 px-4 py-2 bg-[#FFECB3] rounded-full border border-orange-300 text-orange-900">
-                        <div class="w-3 h-3 rounded-full bg-orange-600"></div> Necesita Ayuda
-                    </div>
+                <div style="display: flex; justify-content: center; gap: 16px; font-size: 0.75rem; font-weight: 700;">
+                    <span style="background: var(--role-helper-bg); color: var(--role-helper-text); padding: 4px 12px; border-radius: 12px; border: 1px solid var(--role-helper-border);">Ayudante</span>
+                    <span style="background: var(--role-auto-bg); color: var(--role-auto-text); padding: 4px 12px; border-radius: 12px; border: 1px solid var(--role-auto-border);">Autónomo</span>
+                    <span style="background: var(--role-needs-bg); color: var(--role-needs-text); padding: 4px 12px; border-radius: 12px; border: 1px solid var(--role-needs-border);">Necesita Apoyo</span>
                 </div>
             </div>
         </div>
-        
-        <!-- PÁGINA 2: MAPA -->
+
+        <!-- PÁGINA 2: MAPA EN PDF -->
         <div class="pdf-page">
-            <div class="flex flex-col h-full">
-                <h3 class="text-center font-bold text-3xl text-gray-700 uppercase tracking-widest border-b-2 border-gray-100 pb-6 mb-8">Mapa de Clase</h3>
-                
-                <div id="print-map-container">
-                    <!-- El mapa se clonará aquí -->
+            <div style="display: flex; flex-direction: column; height: 100%; justify-content: space-between;">
+                <div>
+                    <h3 style="font-size: 1.1rem; font-weight: 800; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 20px; color: #0f172a;">
+                        Mapa del Aula (Numeración de abajo a arriba)
+                    </h3>
+                    <div id="print-map-container"></div>
                 </div>
-                
-                <div class="mt-auto w-full bg-gray-800 text-white text-center py-3 font-bold rounded-t-xl uppercase text-sm tracking-widest">
-                    PIZARRA / PROFESOR
+
+                <div style="background: #1e293b; color: white; text-align: center; padding: 10px; border-radius: 12px; font-weight: 800; font-size: 0.8rem; letter-spacing: 0.1em; margin-top: 20px;">
+                    PIZARRA Y MESAS DE TRABAJO (FRENTE DEL AULA)
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Toast -->
-    <div id="toast" class="fixed bottom-8 right-8 bg-gray-800 text-white px-6 py-4 rounded-2xl shadow-2xl transform translate-y-32 transition-transform duration-500 flex items-center gap-4 z-50 font-medium">
-        <div class="bg-pastel-secondary rounded-full p-1"><i class="ph-bold ph-check text-white"></i></div>
-        <span id="toast-msg">Acción completada</span>
+    <div id="toast" class="toast">
+        <i class="ph-bold ph-check-circle" style="color: #4ade80; font-size: 1.2rem;"></i>
+        <span id="toast-msg">Mensaje de notificación</span>
     </div>
 
     <script>
-        // --- ESTADO ---
-        const appState = { group: '', subject: '', students: [], distribution: [] };
-        
-        // --- COLORES TEMA ---
-        const activeTabClass = ['bg-white', 'text-green-700', 'shadow-md'];
-        const inactiveTabClass = ['text-gray-500', 'hover:bg-white/50'];
+        // ESTADO GLOBAL DE LA APLICACIÓN
+        const appState = { 
+            group: '', 
+            subject: '', 
+            students: [], 
+            distribution: [] 
+        };
 
-        // --- INICIALIZACIÓN ---
+        // INICIALIZACIÓN
         document.addEventListener('DOMContentLoaded', () => {
             populateGroups();
             updateCounts();
@@ -552,18 +1087,13 @@
             ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(evt => {
                 dropArea.addEventListener(evt, (e) => { e.preventDefault(); e.stopPropagation(); });
             });
-            dropArea.addEventListener('dragover', () => dropArea.classList.add('drag-over'));
-            dropArea.addEventListener('dragleave', () => dropArea.classList.remove('drag-over'));
-            dropArea.addEventListener('drop', (e) => {
-                dropArea.classList.remove('drag-over');
-                handleDropFile(e);
-            });
+            dropArea.addEventListener('drop', (e) => handleDropFile(e));
             fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
         }
 
         function populateGroups() {
             const select = document.getElementById('select-grupo');
-            const levels = ['1º Primaria', '2º Primaria', '3º Primaria', '4º Primaria', '5º Primaria', '6º Primaria', '1º ESO', '2º ESO', '3º ESO', '4º ESO', '1º BACH', '2º BACH'];
+            const levels = ['1º Primaria', '2º Primaria', '3º Primaria', '4º Primaria', '5º Primaria', '6º Primaria', '1º ESO', '2º ESO', '3º ESO', '4º ESO', '1º Bachillerato', '2º Bachillerato'];
             const letters = ['A', 'B', 'C', 'D'];
             levels.forEach(l => letters.forEach(le => {
                 const opt = document.createElement('option');
@@ -575,24 +1105,29 @@
 
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove(...activeTabClass);
-                btn.classList.add(...inactiveTabClass);
-            });
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+
             document.getElementById(tabId).classList.remove('hidden');
-            const btn = document.getElementById('btn-' + tabId);
-            if(btn) {
-                btn.classList.remove(...inactiveTabClass);
-                btn.classList.add(...activeTabClass);
-            }
+            const activeBtn = document.getElementById('btn-' + tabId);
+            if(activeBtn) activeBtn.classList.add('active');
+
             if(tabId === 'tab-export') updateExportPreview();
         }
 
-        // --- DATOS ---
+        // CARGA DE DATOS
         function loadExampleData() {
             document.getElementById('select-grupo').value = "5º Primaria A";
             document.getElementById('select-asignatura').value = "Matemáticas";
-            const names = ["Alejandro Ruiz", "Beatriz López", "Carlos Menez", "Diana Prince", "Elena Nito", "Fernando Alonso", "Gabriela Sabatini", "Hugo Silva", "Inés Arrimadas", "Javier Bardem", "Karol G", "Luis Fonsi", "María Carey", "Nacho Vidal", "Olga Tañón", "Pedro Pascal", "Quentin Tarantino", "Rosa Melano", "Sergio Ramos", "Teresa Campos", "Ursula Corberó", "Víctor Manuel", "Wanda Nara", "Xavi Hernández"];
+            const names = [
+                "Alonso Ruiz, Alejandro", "Álvarez Moreno, Beatriz", "Benítez Castro, Carlos", 
+                "Cano Domínguez, Diana", "Delgado Fernández, Elena", "Escobar García, Fernando", 
+                "Gómez Hernández, Gabriela", "Hidalgo Jiménez, Hugo", "Ibañez López, Inés", 
+                "Juárez Molina, Javier", "Lara Navarro, Carla", "Marín Ortiz, Luis", 
+                "Navarro Pérez, María", "Olivares Quintero, Nacho", "Pastor Ramos, Olga", 
+                "Quintana Serrano, Pedro", "Ramírez Torres, Raquel", "Sánchez Vidal, Sergio", 
+                "Torres Vega, Teresa", "Ugarte Blanco, Unai", "Valero Campos, Victoria", 
+                "Yáñez Crespo, Mateo", "Zamora Gil, Natalia", "Ximénez Marín, Daniel"
+            ];
             document.getElementById('manual-names').value = names.join('\n');
             saveData(true); 
         }
@@ -607,28 +1142,38 @@
                     try {
                         const data = new Uint8Array(e.target.result);
                         const wb = XLSX.read(data, {type: 'array'});
-                        if (!wb.SheetNames.length) return alert("Excel vacío");
+                        if (!wb.SheetNames.length) return alert("Excel vacío.");
                         const ws = wb.Sheets[wb.SheetNames[0]];
                         const json = XLSX.utils.sheet_to_json(ws, {header: 1});
                         const names = json.map(r => r[0]).filter(n => n && String(n).trim());
                         if(names.length) {
                             document.getElementById('manual-names').value = names.join('\n');
-                            showToast(`Excel: ${names.length} alumnos.`);
-                        } else alert("Sin nombres en 1ª columna");
-                    } catch (err) { alert("Error leyendo Excel"); }
+                            showToast(`Cargados ${names.length} alumnos desde Excel`);
+                            updateStudentCountBadge(names.length);
+                        } else alert("No se encontraron nombres en la 1ª columna.");
+                    } catch (err) { alert("Error al leer Excel."); }
                 };
                 reader.readAsArrayBuffer(file);
             } else {
-                reader.onload = (e) => { document.getElementById('manual-names').value = e.target.result; showToast("TXT cargado"); };
+                reader.onload = (e) => { 
+                    document.getElementById('manual-names').value = e.target.result; 
+                    const lines = e.target.result.split('\n').filter(l => l.trim());
+                    updateStudentCountBadge(lines.length);
+                    showToast("Archivo cargado con éxito"); 
+                };
                 reader.readAsText(file);
             }
+        }
+
+        function updateStudentCountBadge(count) {
+            document.getElementById('student-count-badge').innerText = `${count} Alumnos`;
         }
 
         function saveData(isAuto = false) {
             const group = document.getElementById('select-grupo').value;
             const subject = document.getElementById('select-asignatura').value;
             const raw = document.getElementById('manual-names').value;
-            if (!group || !subject || !raw.trim()) return alert("Faltan datos");
+            if (!group || !subject || !raw.trim()) return alert("Por favor, completa el grupo, la asignatura y la lista.");
             
             appState.group = group;
             appState.subject = subject;
@@ -639,12 +1184,14 @@
                 name: name.trim().replace(/,/g, ''),
                 type: oldMap.get(name.trim().replace(/,/g, '')) || 'autonomous'
             }));
+            
+            updateStudentCountBadge(appState.students.length);
             renderConfigTab();
-            showToast(isAuto ? "Ejemplo cargado" : "Datos guardados");
-            if(isAuto) setTimeout(() => switchTab('tab-config'), 500); else switchTab('tab-config');
+            showToast(isAuto ? "Ejemplo cargado correctamente" : "Datos guardados correctamente");
+            if(isAuto) setTimeout(() => switchTab('tab-config'), 300); else switchTab('tab-config');
         }
 
-        // --- KANBAN ---
+        // KANBAN ROLES
         function renderConfigTab() {
             ['helper', 'autonomous', 'needs-help'].forEach(t => document.getElementById(`zone-${t}`).innerHTML = '');
             appState.students.forEach(s => document.getElementById(`zone-${s.type}`).appendChild(createCard(s)));
@@ -654,19 +1201,20 @@
         function createCard(s) {
             const div = document.createElement('div');
             div.id = s.id;
-            let borderClass = 'border-l-4';
-            if(s.type === 'helper') borderClass += ' border-l-green-400';
-            else if(s.type === 'autonomous') borderClass += ' border-l-blue-400';
-            else borderClass += ' border-l-orange-400';
-            div.className = `${borderClass} p-3 mb-2 rounded-r-xl bg-white shadow-sm text-sm font-medium flex justify-between items-center draggable-source cursor-grab hover:shadow-md transition-all border border-gray-100`;
+            let cardStyle = 'card-auto';
+            if(s.type === 'helper') cardStyle = 'card-helper';
+            if(s.type === 'needs-help') cardStyle = 'card-needs';
+
+            div.className = `student-card ${cardStyle}`;
             div.draggable = true;
             div.ondragstart = (e) => { e.dataTransfer.setData("text", s.id); };
-            div.innerHTML = `<span class="text-gray-700">${s.name}</span><i class="ph-bold ph-dots-six-vertical text-gray-300"></i>`;
+            div.innerHTML = `<span>${s.name}</span><i class="ph-bold ph-dots-six-vertical" style="color: #cbd5e1;"></i>`;
             return div;
         }
 
         function allowDrop(e) { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
         document.addEventListener('dragleave', e => { if(e.target.classList?.contains('drop-zone')) e.target.classList.remove('drag-over'); });
+        
         function drop(e, newType) {
             e.preventDefault(); e.currentTarget.classList.remove('drag-over');
             const id = e.dataTransfer.getData("text");
@@ -676,23 +1224,28 @@
             const stu = appState.students.find(s => s.id === id);
             if(stu) { stu.type = newType; renderConfigTab(); }
         }
+
         function updateCounts() {
-            ['helper', 'autonomous', 'needs-help'].forEach(t => document.getElementById(`count-${t}`).innerText = appState.students.filter(s => s.type === t).length);
+            ['helper', 'autonomous', 'needs-help'].forEach(t => {
+                document.getElementById(`count-${t}`).innerText = appState.students.filter(s => s.type === t).length;
+            });
         }
 
-        // --- AULA ---
+        // DISTRIBUCIÓN DEL AULA (NUMERACIÓN DE ABAJO HACIA ARRIBA)
         function updateGridColumns() {
             const cols = document.getElementById('select-grid-cols').value;
             document.getElementById('aula-map').style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
         }
 
         function distributeStudents() {
-            if(!appState.students.length) return alert("Sin alumnos");
+            if(!appState.students.length) return alert("Ingresa alumnos primero en la pestaña Datos.");
             const size = parseInt(document.getElementById('select-espacio').value);
-            const mode = document.querySelector('input[name="agrupamiento"]:checked').value;
+            const mode = document.getElementById('select-estrategia').value;
+            
             let helpers = appState.students.filter(s => s.type === 'helper').sort(() => Math.random() - .5);
             let autonomous = appState.students.filter(s => s.type === 'autonomous').sort(() => Math.random() - .5);
             let needs = appState.students.filter(s => s.type === 'needs-help').sort(() => Math.random() - .5);
+            
             const numGroups = Math.ceil(appState.students.length / size);
             let groups = Array.from({length: numGroups}, () => []);
             
@@ -717,32 +1270,66 @@
         function renderClassroom() {
             const map = document.getElementById('aula-map');
             map.innerHTML = '';
+
+            const cols = parseInt(document.getElementById('select-grid-cols').value);
+            const totalGroups = appState.distribution.length;
+
+            // Para numerar de abajo hacia arriba (desde la Pizarra), ordenamos la inserción en la cuadrícula de forma invertida
+            // MESA 1 será la más cercana a la pizarra (Fila inferior izquierda)
             appState.distribution.forEach((grp, i) => {
-                const div = document.createElement('div');
-                div.className = 'desk-group';
-                div.dataset.gid = i;
-                div.setAttribute('data-label', `MESA ${i + 1}`);
-                div.ondragover = e => { e.preventDefault(); div.style.backgroundColor = '#f0fdf4'; };
-                div.ondragleave = e => { div.style.backgroundColor = 'white'; };
-                div.ondrop = e => dropInDesk(e, i);
+                const tableNumber = i + 1; // Mesa 1, Mesa 2... empezando desde la más cercana a la pizarra
+
+                const cluster = document.createElement('div');
+                cluster.className = 'desk-cluster';
+                cluster.dataset.gid = i;
+
+                // Calcular orden visual para que las mesas 1, 2, 3 estén en la fila inferior
+                const totalRows = Math.ceil(totalGroups / cols);
+                const currentRow = Math.floor(i / cols); // 0 (primera fila abajo), 1, 2...
+                const visualRowIndex = totalRows - currentRow; // Invertir orden de fila visual
+                const colIndex = (i % cols) + 1;
+
+                cluster.style.gridRow = visualRowIndex;
+                cluster.style.gridColumn = colIndex;
+                
+                const header = document.createElement('div');
+                header.className = 'desk-header';
+                header.innerHTML = `
+                    <span class="desk-title">MESA ${tableNumber}</span>
+                    <span style="font-size: 0.65rem; font-weight: 700; color: #94a3b8;">${grp.length} Alumnos</span>
+                `;
+                cluster.appendChild(header);
+
+                const deskSurface = document.createElement('div');
+                deskSurface.className = 'desk-surface';
+                
+                deskSurface.ondragover = e => { e.preventDefault(); cluster.style.borderColor = '#22c55e'; };
+                deskSurface.ondragleave = e => { cluster.style.borderColor = '#e2e8f0'; };
+                deskSurface.ondrop = e => dropInDesk(e, i);
+
                 grp.forEach(s => {
                     const badge = document.createElement('div');
                     badge.id = `seat-${s.id}`;
-                    let cls = 'student-autonomous';
-                    if(s.type === 'helper') cls = 'student-helper';
-                    if(s.type === 'needs-help') cls = 'student-needs-help';
-                    badge.className = `${cls} px-2 py-1 text-xs font-bold rounded shadow-sm border cursor-move flex items-center justify-center select-none flex-1 min-w-[45%] h-auto text-center`;
-                    badge.innerHTML = `<span class="break-words leading-tight w-full">${s.name}</span>`;
+                    
+                    let seatStyle = 'seat-auto';
+                    if(s.type === 'helper') seatStyle = 'seat-helper';
+                    if(s.type === 'needs-help') seatStyle = 'seat-needs';
+
+                    badge.className = `desk-seat ${seatStyle}`;
+                    badge.innerHTML = s.name;
                     badge.draggable = true;
                     badge.ondragstart = e => { e.dataTransfer.setData("text", JSON.stringify(s)); };
-                    div.appendChild(badge);
+                    
+                    deskSurface.appendChild(badge);
                 });
-                map.appendChild(div);
+
+                cluster.appendChild(deskSurface);
+                map.appendChild(cluster);
             });
         }
 
         function dropInDesk(e, tIdx) {
-            e.preventDefault(); e.currentTarget.style.backgroundColor = 'white';
+            e.preventDefault(); 
             try {
                 const sData = JSON.parse(e.dataTransfer.getData("text"));
                 let sG = -1, sI = -1;
@@ -757,50 +1344,55 @@
             } catch(err) {}
         }
 
-        function saveDistribution() { showToast("Guardado temporalmente"); switchTab('tab-export'); }
+        function saveDistribution() { 
+            showToast("Distribución confirmada correctamente"); 
+            switchTab('tab-export'); 
+        }
 
+        // PDF EXPORT
         function updateExportPreview() {
             document.getElementById('cover-group').innerText = appState.group || "-";
             document.getElementById('cover-subject').innerText = appState.subject || "-";
-            document.getElementById('cover-date').innerText = new Date().toLocaleDateString();
-            document.getElementById('cover-total').innerText = appState.students.length;
-            document.getElementById('export-preview').innerHTML = `<p><strong>Alumnos:</strong> ${appState.students.length} | <strong>Grupos:</strong> ${appState.distribution.length}</p>`;
+            document.getElementById('cover-total').innerText = appState.students.length || "0";
+            document.getElementById('cover-teams').innerText = appState.distribution.length || "0";
+            document.getElementById('pdf-date-top').innerText = new Date().toLocaleDateString('es-ES');
+
+            document.getElementById('export-preview').innerHTML = `
+                <div style="background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0; display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+                    <div><span style="font-size: 0.7rem; color: #64748b; display: block;">Grupo</span><strong>${appState.group || '-'}</strong></div>
+                    <div><span style="font-size: 0.7rem; color: #64748b; display: block;">Asignatura</span><strong>${appState.subject || '-'}</strong></div>
+                    <div><span style="font-size: 0.7rem; color: #64748b; display: block;">Alumnos</span><strong>${appState.students.length}</strong></div>
+                    <div><span style="font-size: 0.7rem; color: #64748b; display: block;">Equipos</span><strong>${appState.distribution.length}</strong></div>
+                </div>
+            `;
         }
 
         function generatePDF() {
-            if(!appState.distribution.length) return alert("Primero genera una distribución en la pestaña AULA");
+            if(!appState.distribution.length) return alert("Primero genera la distribución de alumnos en la pestaña Aula.");
             
-            updateExportPreview(); // Fill text fields in print-area
+            updateExportPreview(); 
             
-            // Setup Map in print-area
             const mapContainer = document.getElementById('print-map-container');
             const originalMap = document.getElementById('aula-map');
             mapContainer.innerHTML = '';
             
-            // Clone map node
             const cloneMap = originalMap.cloneNode(true);
             cloneMap.style.gridTemplateColumns = originalMap.style.gridTemplateColumns; 
             
             mapContainer.appendChild(cloneMap);
 
-            showToast("Generando PDF...");
+            showToast("Generando documento PDF...");
 
-            // Switch view mode
             document.body.classList.add('generating-pdf');
             window.scrollTo(0, 0);
 
-            // Wait for DOM update
             setTimeout(() => {
                 const element = document.getElementById('print-area');
                 const opt = {
-                    margin: [0, 0, 0, 0], // [top, left, bottom, right]
-                    filename: `equipos_${appState.group.replace(/\s+/g, '_')}.pdf`,
+                    margin: [0, 0, 0, 0],
+                    filename: `Equipos_${appState.group.replace(/\s+/g, '_')}.pdf`,
                     image: { type: 'jpeg', quality: 0.98 },
-                    html2canvas: { 
-                        scale: 2, 
-                        useCORS: true, 
-                        scrollY: 0,
-                    },
+                    html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
                     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
                     pagebreak: { mode: ['css', 'legacy'] }
                 };
@@ -808,18 +1400,18 @@
                 html2pdf().set(opt).from(element).save()
                     .then(() => {
                         document.body.classList.remove('generating-pdf');
-                        showToast("¡PDF descargado!");
+                        showToast("PDF descargado correctamente");
                     })
                     .catch(err => {
                         console.error(err);
                         document.body.classList.remove('generating-pdf');
                         showToast("Error al generar PDF");
                     });
-            }, 500);
+            }, 400);
         }
 
         function resetApp() {
-            if(confirm("¿Estás seguro de que quieres borrar todos los datos y empezar de cero?")) {
+            if(confirm("¿Deseas reiniciar toda la configuración?")) {
                 location.reload();
             }
         }
@@ -827,8 +1419,8 @@
         function showToast(msg) {
             const t = document.getElementById('toast');
             document.getElementById('toast-msg').innerText = msg;
-            t.classList.remove('translate-y-32');
-            setTimeout(() => t.classList.add('translate-y-32'), 3000);
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3000);
         }
     </script>
 </body>
